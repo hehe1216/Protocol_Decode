@@ -1,39 +1,102 @@
 import json
 
-def read_json_from_file(filename):
-    try:
-        with open(filename, 'r', encoding='utf-8') as file:
-            return json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"读取 JSON 文件错误: {e}")
-        return None
+class JsonParameter:
+    def __init__(self, name: str, length: str):
+        self.name = name
+        self.length = length
+
+    @classmethod
+    def from_json(cls, json_data: dict):
+        return cls(json_data.get("name", ""), json_data.get("length", ""))
+
+class JsonCommand:
+    def __init__(self, cmd_data: list):
+        self.command_data = cmd_data
+
+    @classmethod
+    def from_json(cls, json_data: dict):
+        return cls(json_data)
+
+    def get_parameters(self):
+        parameters = []
+        for param_id, param_data in self.command_data.items():
+            for pdata in param_data:
+                parameter = JsonParameter.from_json({"name": pdata, "length": pdata})
+                parameters.append(parameter)
+        return  param_id, parameters
+
+class JsonCommandInfo:
+    def __init__(self, unit_cmd: dict):
+        self.unit_cmd = unit_cmd
+
+    @classmethod
+    def from_json(cls, json_data: dict):
+        return cls(json_data.get("unit_cmd", {}))
+
+    def get_commands(self):
+        commands = []
+        for cmd_id, cmd_list in self.unit_cmd.items():
+            for cmd_data in cmd_list:
+                command = JsonCommand.from_json(cmd_data)
+                commands.append(command)
+        return commands
+
+class ReadJsonFromFile:
+    def __init__(self, filename: str):
+        self.filepath = filename
+
+    def get_data_from_file(self):
+        try:
+            with open(self.filepath, 'r', encoding='utf-8') as file:
+                return json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"读取 Json 文件错误：{e}")
+            return None
+
+
+class ReadJsonParam:
+    def __init__(self, filename:str, paramId:int):
+        self.filename = filename
+        self.paramId = paramId
     
-def extract_command_info(parsed_data):
-    command_info = {}
+    def get_paramlist(self):
+        r = ReadJsonFromFile(self.filename)
+        json_data = r.get_data_from_file()
 
-    unit_cmd_data = parsed_data.get("unit_cmd", {})
-    if isinstance(unit_cmd_data, dict):
-        for cmd_id, cmd_list in unit_cmd_data.items():
-            command_info[cmd_id] = []
-            for cmd_item in cmd_list:
-                for cmd_name, params in cmd_item.items():
-                    cmd_info = {"paramId": cmd_name, "parameters": []}
-                    for param in params:
-                        if isinstance(param, dict):
-                            for param_name, param_value in param.items():
-                                if isinstance(param_value, list):
-                                    param_info = {"name": param_name, "fields": param_value}
-                                    print(param_info)
-                                    cmd_info["parameters"].append(param_info)
+        commands_info = JsonCommandInfo.from_json(json_data)
+        commands = commands_info.get_commands()
 
-                    command_info[cmd_id].append(cmd_info)
+        for command in commands:
+            paramid, parameters = command.get_parameters()
+            if paramid == self.paramId:
+                paramlists = []
+                for param in parameters:
+                    print(f"{param}")
+                    paramlist = []
+                    name = param.name.get("name", "")
+                    length = param.length.get("length", "")
+                    paramlist.append(name)
+                    paramlist.append(length)
+                paramlists.append(paramlist)
+        return paramlists
 
-    return command_info
 
 if __name__ == "__main__":
     json_filename = "protocol.json"
-    json_data = read_json_from_file(json_filename)
+    r = ReadJsonFromFile(json_filename)
+    json_data = r.get_data_from_file()
+    print(f"{json_data}")
 
-    if json_data:
-        command_info = extract_command_info(json_data)
-        print(command_info)
+    commands_info = JsonCommandInfo.from_json(json_data)
+    commands = commands_info.get_commands()
+   
+    for command in commands:
+        paramid, parameters = command.get_parameters()
+        print(f"{paramid}")
+        for param in parameters:
+            print(f"{param.name} {param.length}")
+            name = param.name.get("name", "")
+            print(f"{name}")
+            length = param.length.get("length", "")
+            print(f"{length}")
+

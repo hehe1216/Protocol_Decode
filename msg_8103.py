@@ -5,6 +5,7 @@ import os
 import sys
 from func import *
 from typing import List
+from readjson import *
 
 class TMsg8103():
     def __init__(self) -> None:
@@ -68,8 +69,8 @@ class TMsg8103():
             valid = True
         return valid
     
-    def GetParamVal(self):
-        return self.param_val
+    def GetParamList(self):
+        return self.param_list
     
 
     def Decode(self, code:bytes):
@@ -130,10 +131,6 @@ class TMsg8103():
 
         return True
 
-
-
-
-
 class MessageBase:
     def __init__(self, code_len: int, parameters):
         self.code_len = code_len
@@ -170,13 +167,16 @@ class msg_8103_Parameter:
     def set_value(self, value: bytes):
         self.value = value
 
-class Msg8103F24D(MessageBase):
-    def __init__(self):
-        parameters_list = [
-            msg_8103_Parameter(name="通道视频开关", length=2),
-            msg_8103_Parameter(name="通道视频开关使能", length=2),
-        ]
-        super().__init__(code_len=4, parameters=parameters_list)
+class Msg8103_ID(MessageBase):
+    def __init__(self, paramId:int, parameterslist:dict):
+        self.paramId = paramId
+        self.parametersList = parameterslist
+        super().__init__(code_len=4, parameters=self.parametersList)
+        # parameters_list = [
+        #     msg_8103_Parameter(name="通道视频开关", length=2),
+        #     msg_8103_Parameter(name="通道视频开关使能", length=2),
+        # ]
+        # super().__init__(code_len=4, parameters=parameters_list)
 
 
 if __name__ == "__main__":

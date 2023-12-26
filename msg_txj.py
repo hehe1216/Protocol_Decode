@@ -166,7 +166,7 @@ class TMsgTxj:
         data_unit_hex = self.data_unit.hex()
         crc_hex = hex(self.crc)
         end_hex = self.end_flag.hex()
-
+        
         print(f"起始字符：  {begin_hex}")
         print(f"消息ID:     {cmd_unit_hex}")
         print(f"消息体属性：{msg_attr_hex}")
